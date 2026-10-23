@@ -1,0 +1,24 @@
+name: refresh-market
+# اختياري: تحديث الأسعار والأخبار كل 6 ساعات دون فتح التطبيق. يحتاج سرًّا باسم GEMINI_API_KEY في إعدادات المستودع.
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/refresh-market.mjs
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - run: |
+          git config user.name "market-bot"
+          git config user.email "market-bot@users.noreply.github.com"
+          git add data/market.json
+          git diff --cached --quiet || (git commit -m "تحديث بيانات السوق" && git push)
